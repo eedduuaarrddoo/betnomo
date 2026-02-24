@@ -1,0 +1,192 @@
+/* ── Overlay ─────────────────────────────────────────────────────────────── */
+.fm-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+/* ── Modal ───────────────────────────────────────────────────────────────── */
+.fm-modal {
+  position: relative;
+  background: #111820;
+  border: 1px solid rgba(240, 165, 0, 0.2);
+  border-radius: 16px;
+  padding: 32px 28px 28px;
+  width: 100%;
+  max-width: 440px;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.72);
+  color: #c8d3da;
+  font-family: 'Exo 2', sans-serif;
+}
+
+/* ── Fechar ──────────────────────────────────────────────────────────────── */
+.fm-close {
+  position: absolute;
+  top: 14px; right: 18px;
+  background: none; border: none;
+  color: #6b7b8a; font-size: 1.4rem;
+  cursor: pointer; line-height: 1;
+  transition: color 0.2s;
+}
+.fm-close:hover { color: #c8d3da; }
+
+/* ── Título ──────────────────────────────────────────────────────────────── */
+.fm-title {
+  font-family: 'Cinzel', serif;
+  font-size: 1.5rem; font-weight: 700;
+  color: #fff; text-align: center;
+  margin-bottom: 4px;
+  text-transform: uppercase; letter-spacing: 0.04em;
+}
+.fm-gold { color: #f0a500; font-style: italic; }
+
+.fm-subtitle {
+  text-align: center; font-size: 0.75rem;
+  color: #6b7b8a; margin-bottom: 24px;
+}
+
+/* ── Tipos ───────────────────────────────────────────────────────────────── */
+.fm-tipos { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
+
+.fm-tipo-btn {
+  display: flex; align-items: center; gap: 12px;
+  background: #161e27; border: 1px solid #1e2830;
+  border-radius: 10px; padding: 12px 14px;
+  cursor: pointer; text-align: left; color: #c8d3da;
+  transition: border-color 0.2s, background 0.2s;
+}
+.fm-tipo-btn:hover { border-color: rgba(240,165,0,.35); background: #192130; }
+.fm-tipo-btn.ativo  { border-color: #f0a500; background: #1c2535; }
+
+/* ── Badge (tipo) ────────────────────────────────────────────────────────── */
+.fm-badge {
+  width: 36px; height: 36px; border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Cinzel', serif; font-weight: 700; font-size: 1rem;
+  flex-shrink: 0;
+}
+.fm-badge.sm { width: 26px; height: 26px; border-radius: 6px; font-size: 0.75rem; }
+
+.fm-badge[data-tipo="A"] { background: linear-gradient(135deg,#b8860b,#f0d060); color: #1a1000; }
+.fm-badge[data-tipo="B"] { background: linear-gradient(135deg,#6b7b8a,#b0bec5); color: #0d1117; }
+.fm-badge[data-tipo="C"] { background: linear-gradient(135deg,#7c4a1a,#c87941); color: #fff; }
+
+.fm-tipo-info { flex: 1; }
+.fm-tipo-nome { font-size: 0.82rem; font-weight: 600; margin-bottom: 2px; }
+.fm-tipo-desc { font-size: 0.68rem; color: #6b7b8a; }
+
+.fm-tipo-valor {
+  font-family: 'Cinzel', serif;
+  font-size: 1rem; font-weight: 700; color: #f0a500;
+  white-space: nowrap;
+}
+
+/* ── Botões ──────────────────────────────────────────────────────────────── */
+.fm-btn-primary {
+  width: 100%; padding: 14px;
+  background: #3dd68c; color: #0d1117;
+  border: none; border-radius: 8px;
+  font-family: 'Exo 2', sans-serif;
+  font-size: 0.9rem; font-weight: 700;
+  letter-spacing: 0.06em; text-transform: uppercase;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  transition: background 0.2s, opacity 0.2s;
+}
+.fm-btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+.fm-btn-primary:not(:disabled):hover { background: #2ec87a; }
+
+.fm-btn-copiar {
+  width: 100%; padding: 10px;
+  background: #161e27; border: 1px solid #1e2830;
+  border-radius: 8px; color: #c8d3da;
+  font-family: 'Exo 2', sans-serif; font-size: 0.8rem;
+  cursor: pointer; transition: background 0.2s;
+}
+.fm-btn-copiar:hover { background: #192130; }
+
+.fm-btn-confirmar {
+  width: 100%; padding: 13px;
+  background: transparent; border: 1px solid #f0a500;
+  border-radius: 8px; color: #f0a500;
+  font-family: 'Exo 2', sans-serif; font-size: 0.82rem; font-weight: 600;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  transition: background 0.2s, color 0.2s;
+}
+.fm-btn-confirmar:not(:disabled):hover { background: #f0a500; color: #0d1117; }
+.fm-btn-confirmar:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* ── QR Step ─────────────────────────────────────────────────────────────── */
+.fm-qr-step { display: flex; flex-direction: column; gap: 14px; }
+
+.fm-qr-header { display: flex; align-items: center; justify-content: space-between; }
+
+.fm-back {
+  background: none; border: none; color: #6b7b8a;
+  font-size: 0.78rem; cursor: pointer; padding: 0;
+  font-family: 'Exo 2', sans-serif;
+  transition: color 0.2s;
+}
+.fm-back:hover { color: #c8d3da; }
+
+.fm-qr-valor {
+  display: flex; align-items: center; gap: 8px;
+  font-family: 'Cinzel', serif; font-size: 1rem; font-weight: 700; color: #f0a500;
+}
+
+.fm-instrucao { font-size: 0.75rem; color: #6b7b8a; text-align: center; }
+
+.fm-qr-box {
+  display: flex; align-items: center; justify-content: center;
+  background: #fff; border-radius: 12px;
+  padding: 12px; margin: 0 auto; width: fit-content;
+  min-width: 224px; min-height: 224px;
+}
+.fm-qr-img { display: block; border-radius: 4px; width: 200px; height: 200px; }
+
+.fm-qr-placeholder {
+  width: 200px; height: 200px;
+  display: flex; align-items: center; justify-content: center;
+}
+
+.fm-aviso { font-size: 0.65rem; color: #4d5d6a; text-align: center; }
+
+/* ── Sucesso ─────────────────────────────────────────────────────────────── */
+.fm-sucesso {
+  display: flex; flex-direction: column; align-items: center;
+  gap: 10px; padding-top: 8px;
+}
+.fm-sucesso-icon { font-size: 3rem; }
+.fm-sucesso-titulo {
+  font-family: 'Cinzel', serif; font-size: 1.4rem;
+  font-weight: 700; color: #3dd68c;
+}
+.fm-sucesso-desc { font-size: 0.82rem; color: #6b7b8a; text-align: center; margin-bottom: 10px; }
+
+/* ── Erro ────────────────────────────────────────────────────────────────── */
+.fm-error { font-size: 0.75rem; color: #e05252; text-align: center; }
+
+/* ── Spinner ─────────────────────────────────────────────────────────────── */
+.fm-spinner {
+  display: inline-block;
+  width: 14px; height: 14px;
+  border: 2px solid rgba(255,255,255,0.3);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  flex-shrink: 0;
+}
+.fm-spinner.lg   { width: 32px; height: 32px; border-width: 3px; border-top-color: #f0a500; }
+.fm-spinner.dark { border-color: rgba(240,165,0,.3); border-top-color: #f0a500; }
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── Transição modal ─────────────────────────────────────────────────────── */
+.modal-fade-enter-active, .modal-fade-leave-active { transition: opacity 0.25s ease; }
+.modal-fade-enter-from,   .modal-fade-leave-to     { opacity: 0; }

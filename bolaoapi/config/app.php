@@ -2,6 +2,10 @@
 
 return [
 
+
+'pix_chave'  => env('PIX_CHAVE'),
+'pix_nome'   => env('PIX_NOME'),
+'pix_cidade' => env('PIX_CIDADE'),
     /*
     |--------------------------------------------------------------------------
     | Application Name

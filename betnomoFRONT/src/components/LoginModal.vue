@@ -37,12 +37,19 @@ function onOverlayClick(e: MouseEvent) {
   if ((e.target as HTMLElement).classList.contains('modal-overlay')) close()
 }
 
+import { useRouter } from 'vue-router'
+
+const router = useRouter()
+
 async function handleSubmit() {
   const success = await auth.login({
     username: form.value.identifier,
     password: form.value.password
   })
-  if (success) close()
+  if (success) {
+    close()
+    router.push('/dashboard')
+  }
 }
 
 function switchToRegister() {

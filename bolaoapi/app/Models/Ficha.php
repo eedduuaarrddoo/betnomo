@@ -2,30 +2,29 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Str;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Ficha extends Model
 {
-    protected $fillable = ['tipo', 'valor', 'token', 'usada', 'user_id'];
+    use HasFactory;
 
-    
-    public static array $valores = [
-        'A' => 5.00,
-        'B' => 10.00,
-        'C' => 20.00,
+    protected $fillable = [
+        'tipo',
+        'valor',
+        'token',
+        'usada',
+        'user_id',
+    ];
+
+    protected $casts = [
+        'usada' => 'boolean',
+        'valor' => 'integer',
     ];
 
     
-    protected static function booted(): void
-    {
-        static::creating(function (Ficha $ficha) {
-            $ficha->token = Str::random(64);
-            $ficha->valor = self::$valores[$ficha->tipo];
-        });
-    }
-
-    public function user()
+    public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
