@@ -17,6 +17,30 @@ class FichaController extends Controller
     }
 
     /**
+     * GET /api/fichas
+     * Retorna todas as fichas do usuário logado agrupadas por tipo.
+     */
+    public function index(Request $request): JsonResponse
+    {
+        $fichas = $request->user()
+            ->fichas()
+            ->orderBy('created_at', 'desc')
+            ->get(['id', 'tipo', 'valor', 'usada', 'token', 'created_at']);
+
+        $resumo = [
+            'A' => $fichas->where('tipo', 'A')->where('usada', false)->count(),
+            'B' => $fichas->where('tipo', 'B')->where('usada', false)->count(),
+            'C' => $fichas->where('tipo', 'C')->where('usada', false)->count(),
+        ];
+
+        return response()->json([
+            'fichas' => $fichas,
+            'resumo' => $resumo,
+            'total'  => $fichas->where('usada', false)->count(),
+        ]);
+    }
+
+    /**
      * POST /api/fichas/gerar-qr
      * Body: { "tipo": "A" | "B" | "C" }
      */

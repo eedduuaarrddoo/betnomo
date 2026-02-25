@@ -2,13 +2,48 @@
 import { ref, computed, onMounted } from 'vue'
 import { useAuthStore } from '../stores/auth'
 import '../assets/css/userhome.css'
-import ComprarFichaModal from '../components/ComprarFichaModal.vue' 
+import ComprarFichaModal from '../components/ComprarFichaModal.vue'
 
 const auth = useAuthStore()
 
 const activeCategory   = ref('classe-a')
-const showComprarModal = ref(false)               
+const showComprarModal = ref(false)
 
+
+interface ResumoFichas {
+  A: number
+  B: number
+  C: number
+}
+
+const fichasResumo  = ref<ResumoFichas>({ A: 0, B: 0, C: 0 })
+const fichasTotal   = ref(0)
+const loadingFichas = ref(false)
+
+const API   = import.meta.env.VITE_API_URL ?? '/api'
+const token = () => localStorage.getItem('auth_token') ?? ''
+
+async function carregarFichas() {
+  loadingFichas.value = true
+  try {
+    const res  = await fetch(`${API}/fichas`, {
+      headers: { Authorization: `Bearer ${token()}` },
+    })
+    const data = await res.json()
+    fichasResumo.value = data.resumo   // { A: 2, B: 0, C: 1 }
+    fichasTotal.value  = data.total
+  } catch (e) {
+    console.error('Erro ao carregar fichas:', e)
+  } finally {
+    loadingFichas.value = false
+  }
+}
+
+function onFichaCreated() {
+  carregarFichas()  // recarrega do servidor para refletir o estado real
+}
+
+// ── Bolões (dados estáticos por enquanto) ─────────────────────────────────────
 const categories = [
   { id: 'classe-a', label: 'Bolão Classe A', emoji: '🥇', count: 3 },
   { id: 'classe-b', label: 'Bolão Classe B', emoji: '🥈', count: 5 },
@@ -59,15 +94,8 @@ const userInitial = computed(() =>
   auth.user?.username?.charAt(0).toUpperCase() || '?'
 )
 
-const userFichas = ref(1)
-
-// Chamado pelo modal ao criar ficha com sucesso — atualiza o contador
-function onFichaCreated() {
-  userFichas.value += 1
-}
-
-onMounted(async () => {
-  // TODO: buscar fichas do usuário via API
+onMounted(() => {
+  carregarFichas()
 })
 </script>
 
@@ -93,6 +121,8 @@ onMounted(async () => {
       <div style="flex: 1" />
 
       <div class="player-card">
+
+        <!-- Avatar + nome -->
         <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 4px;">
           <div class="player-avatar">{{ userInitial }}</div>
           <div>
@@ -103,16 +133,16 @@ onMounted(async () => {
           </div>
         </div>
 
+        <!-- Fichas: total + botão comprar -->
         <div class="player-fichas">
           <div class="fichas-icon">F</div>
           <div>
             <p style="font-size: 0.65rem; color: #6b7b8a; line-height: 1;">Fichas</p>
             <p style="font-family: 'Cinzel', serif; font-size: 1rem; font-weight: 700; color: #f0a500; line-height: 1.3;">
-              {{ userFichas }}
+              <span v-if="loadingFichas">…</span>
+              <span v-else>{{ fichasTotal }}</span>
             </p>
           </div>
-
-          
           <button
             style="margin-left: auto; font-size: 0.68rem; color: #3dd68c; font-weight: 600;
                    background: none; border: none; cursor: pointer; padding: 0;"
@@ -122,6 +152,32 @@ onMounted(async () => {
           </button>
         </div>
 
+        <!-- Breakdown por tipo A / B / C -->
+        <div
+          v-if="!loadingFichas && fichasTotal > 0"
+          style="display: flex; gap: 6px; margin-top: 8px;"
+        >
+          <div
+            v-for="tipo in ['A', 'B', 'C'] as const"
+            :key="tipo"
+            style="flex: 1; background: rgba(13,17,23,0.6); border-radius: 6px;
+                   padding: 5px 4px; text-align: center;"
+          >
+            <p style="font-size: 0.58rem; color: #6b7b8a; margin-bottom: 2px; text-transform: uppercase;">
+              Classe {{ tipo }}
+            </p>
+            <p
+              style="font-family: 'Cinzel', serif; font-size: 0.88rem; font-weight: 700; line-height: 1;"
+              :style="{
+                color: tipo === 'A' ? '#f0d060' : tipo === 'B' ? '#b0bec5' : '#c87941'
+              }"
+            >
+              {{ fichasResumo[tipo] }}
+            </p>
+          </div>
+        </div>
+
+        <!-- Bolões ativos -->
         <div style="margin-top: 10px; padding-top: 10px; border-top: 1px solid rgba(30,36,40,0.8);">
           <p style="font-size: 0.68rem; color: #6b7b8a; margin-bottom: 4px;">Bolões ativos</p>
           <p style="font-family: 'Cinzel', serif; font-size: 1.1rem; font-weight: 700; color: #c8d3da;">0</p>
@@ -235,7 +291,6 @@ onMounted(async () => {
 
     </main>
 
-    
     <ComprarFichaModal
       :open="showComprarModal"
       @close="showComprarModal = false"

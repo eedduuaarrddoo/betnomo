@@ -13,6 +13,7 @@ Route::middleware('auth:api')->group(function () {
 
     
     Route::prefix('fichas')->group(function () {
+        Route::get('/',          [FichaController::class, 'index']);
         Route::post('gerar-qr',  [FichaController::class, 'gerarQr']);
         Route::post('confirmar', [FichaController::class, 'confirmar']);
         Route::post('validar',   [FichaController::class, 'validar']);
