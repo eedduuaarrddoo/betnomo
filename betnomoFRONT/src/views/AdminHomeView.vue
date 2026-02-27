@@ -1,0 +1,372 @@
+<script setup lang="ts">
+import { ref, computed, onMounted } from 'vue'
+import { useAuthStore } from '../stores/auth'
+import { useRouter } from 'vue-router'
+import '../assets/css/Adminhomeview.css'
+
+const auth   = useAuthStore()
+const router = useRouter()
+
+const API   = import.meta.env.VITE_API_URL ?? '/api'
+const token = () => localStorage.getItem('auth_token') ?? ''
+
+// ── Navegação da sidebar ──────────────────────────────────────────────────────
+const activeNav = ref('boloes')
+
+// ── Filtro de classe ──────────────────────────────────────────────────────────
+const filtroClasse = ref<'TODOS' | 'A' | 'B' | 'C'>('TODOS')
+
+// ── Bolões ────────────────────────────────────────────────────────────────────
+interface Bolao {
+  id: number
+  classe: string
+  hora_abertura: string
+  hora_sorteio: string
+  participantes: number
+  max_participantes: number
+  valor_total: number
+  status: 'aberto' | 'fechado'
+}
+
+const boloes        = ref<Bolao[]>([])
+const loadingBoloes = ref(false)
+
+const boloesFiltrados = computed(() => {
+  if (filtroClasse.value === 'TODOS') return boloes.value
+  return boloes.value.filter(b => b.classe === filtroClasse.value)
+})
+
+async function carregarBoloes() {
+  loadingBoloes.value = true
+  try {
+    const res = await fetch(`${API}/boloes`, {
+      headers: { Authorization: `Bearer ${token()}` },
+    })
+    boloes.value = await res.json()
+  } catch (e) {
+    console.error('Erro ao carregar bolões:', e)
+  } finally {
+    loadingBoloes.value = false
+  }
+}
+
+// ── Stats ─────────────────────────────────────────────────────────────────────
+const stats = computed(() => ({
+  total:    boloes.value.length,
+  abertos:  boloes.value.filter(b => b.status === 'aberto').length,
+  fechados: boloes.value.filter(b => b.status === 'fechado').length,
+  fichas:   boloes.value.reduce((acc, b) => acc + b.valor_total, 0),
+}))
+
+// ── Modal criar bolão ─────────────────────────────────────────────────────────
+const showCriarModal = ref(false)
+const criando        = ref(false)
+const criarError     = ref('')
+
+const novobolao = ref({
+  classe:           'C',
+  hora_abertura:    '',
+  hora_sorteio:     '',
+  max_participantes: 20,
+})
+
+async function criarBolao() {
+  criando.value    = true
+  criarError.value = ''
+
+  try {
+    const res  = await fetch(`${API}/admin/boloes`, {
+      method:  'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token()}`,
+      },
+      body: JSON.stringify(novobolao.value),
+    })
+    const data = await res.json()
+    if (!res.ok) throw new Error(data.message ?? 'Erro ao criar bolão')
+
+    showCriarModal.value = false
+    novobolao.value = { classe: 'C', hora_abertura: '', hora_sorteio: '', max_participantes: 20 }
+    await carregarBoloes()
+  } catch (e: any) {
+    criarError.value = e.message
+  } finally {
+    criando.value = false
+  }
+}
+
+// ── Sortear ───────────────────────────────────────────────────────────────────
+async function sortear(bolaoId: number) {
+  if (!confirm('Confirmar sorteio deste bolão?')) return
+  try {
+    const res  = await fetch(`${API}/admin/boloes/${bolaoId}/sortear`, {
+      method:  'POST',
+      headers: { Authorization: `Bearer ${token()}` },
+    })
+    const data = await res.json()
+    if (!res.ok) throw new Error(data.message ?? 'Erro ao sortear')
+    alert(`🏆 Vencedor: ${data.vencedor}`)
+    await carregarBoloes()
+  } catch (e: any) {
+    alert(e.message)
+  }
+}
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+function progressPercent(b: Bolao) {
+  return Math.round((b.participantes / b.max_participantes) * 100)
+}
+
+const userInitial = computed(() =>
+  auth.user?.username?.charAt(0).toUpperCase() || 'A'
+)
+
+function logout() {
+  auth.logout()
+  router.push('/login')
+}
+
+onMounted(() => {
+  carregarBoloes()
+})
+</script>
+
+<template>
+  <div class="admin-layout">
+
+    <!-- ── Sidebar ─────────────────────────────────────────────────────────── -->
+    <aside class="admin-sidebar">
+      <div class="admin-logo"><span>Adm </span>Juvio</div>
+
+      <p class="admin-section-title">Menu</p>
+
+      <button
+        :class="['admin-nav-btn', activeNav === 'boloes' ? 'active' : '']"
+        @click="activeNav = 'boloes'"
+      >
+        <span class="nav-icon">🎲</span>
+        Bolões
+        <span class="admin-nav-badge">{{ stats.total }}</span>
+      </button>
+
+      <button
+        :class="['admin-nav-btn', activeNav === 'usuarios' ? 'active' : '']"
+        @click="activeNav = 'usuarios'"
+      >
+        <span class="nav-icon">👥</span>
+        Usuários
+      </button>
+
+      <button
+        :class="['admin-nav-btn', activeNav === 'fichas' ? 'active' : '']"
+        @click="activeNav = 'fichas'"
+      >
+        <span class="nav-icon">🪙</span>
+        Fichas
+      </button>
+
+      <div style="flex: 1" />
+
+      <!-- Card admin -->
+      <div class="admin-user-card">
+        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+          <div class="admin-avatar">{{ userInitial }}</div>
+          <div>
+            <p style="font-size: 0.8rem; color: #c8d3da; font-weight: 600;">
+              {{ auth.user?.username || 'Admin' }}
+            </p>
+            <span class="admin-badge">Admin</span>
+          </div>
+        </div>
+        <button
+          style="width:100%; padding: 7px; background: rgba(224,82,82,0.1); border: 1px solid rgba(224,82,82,0.25);
+                 border-radius: 6px; color: #e05252; font-size: 0.72rem; font-weight: 600;
+                 cursor: pointer; font-family: 'Exo 2', sans-serif;"
+          @click="logout"
+        >
+          Sair
+        </button>
+      </div>
+    </aside>
+
+    <!-- ── Main ───────────────────────────────────────────────────────────── -->
+    <div class="admin-main">
+
+      <!-- Topbar -->
+      <div class="admin-topbar">
+        <div>
+          <p class="admin-topbar-title">Dashboard Admin</p>
+          <p class="admin-topbar-sub">Gerencie bolões e acompanhe os resultados</p>
+        </div>
+      </div>
+
+      <!-- Conteúdo -->
+      <div class="admin-content">
+
+        <!-- Stats -->
+        <div class="admin-stats-grid">
+          <div class="admin-stat-card gold">
+            <p class="stat-label">Total de Bolões</p>
+            <p class="stat-value gold">{{ stats.total }}</p>
+          </div>
+          <div class="admin-stat-card green">
+            <p class="stat-label">Abertos</p>
+            <p class="stat-value green">{{ stats.abertos }}</p>
+          </div>
+          <div class="admin-stat-card red">
+            <p class="stat-label">Fechados</p>
+            <p class="stat-value red">{{ stats.fechados }}</p>
+          </div>
+          <div class="admin-stat-card silver">
+            <p class="stat-label">Fichas em Jogo</p>
+            <p class="stat-value">{{ stats.fichas }}</p>
+            <p class="stat-sub">soma dos prêmios</p>
+          </div>
+        </div>
+
+        <!-- Seção bolões -->
+        <div v-if="activeNav === 'boloes'">
+
+          <div class="admin-section-header">
+            <span class="admin-section-label">Bolões</span>
+            <button class="btn-criar-bolao" @click="showCriarModal = true">
+              + Criar Bolão
+            </button>
+          </div>
+
+          <!-- Filtro -->
+          <div class="admin-filter-tabs">
+            <button
+              v-for="c in ['TODOS', 'A', 'B', 'C']"
+              :key="c"
+              :class="['filter-tab', filtroClasse === c ? 'active' : '']"
+              @click="filtroClasse = c as any"
+            >
+              {{ c === 'TODOS' ? 'Todos' : `Classe ${c}` }}
+            </button>
+          </div>
+
+          <!-- Tabela -->
+          <div class="admin-table-wrap">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>Classe</th>
+                  <th>Abertura</th>
+                  <th>Sorteio</th>
+                  <th>Participantes</th>
+                  <th>Progresso</th>
+                  <th>Prêmio</th>
+                  <th>Status</th>
+                  <th>Ação</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-if="loadingBoloes">
+                  <td colspan="8" style="text-align:center; color:#3d4d5a; padding: 24px;">
+                    Carregando…
+                  </td>
+                </tr>
+                <tr v-else-if="boloesFiltrados.length === 0">
+                  <td colspan="8" class="admin-empty">Nenhum bolão encontrado.</td>
+                </tr>
+                <tr v-for="bolao in boloesFiltrados" :key="bolao.id">
+                  <td>
+                    <span :class="['classe-badge', bolao.classe]">{{ bolao.classe }}</span>
+                  </td>
+                  <td>{{ bolao.hora_abertura }}</td>
+                  <td>{{ bolao.hora_sorteio }}</td>
+                  <td style="color:#f0a500;">
+                    {{ bolao.participantes }}/{{ bolao.max_participantes }}
+                  </td>
+                  <td>
+                    <div class="table-progress">
+                      <div
+                        class="table-progress-fill"
+                        :style="{ width: progressPercent(bolao) + '%' }"
+                      />
+                    </div>
+                  </td>
+                  <td style="color:#3dd68c;">{{ bolao.valor_total }} fichas</td>
+                  <td>
+                    <span :class="['status-pill', bolao.status]">
+                      {{ bolao.status === 'aberto' ? 'Aberto' : 'Fechado' }}
+                    </span>
+                  </td>
+                  <td>
+                    <button
+                      class="btn-sortear"
+                      :disabled="bolao.status === 'aberto' || bolao.participantes === 0"
+                      @click="sortear(bolao.id)"
+                    >
+                      Sortear
+                    </button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Placeholder outras seções -->
+        <div v-else class="admin-empty" style="margin-top: 40px;">
+          <p style="font-size:2rem; margin-bottom:8px;">🚧</p>
+          <p>Seção em construção</p>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ── Modal Criar Bolão ────────────────────────────────────────────── -->
+    <Transition name="modal-fade">
+      <div v-if="showCriarModal" class="cb-overlay" @click.self="showCriarModal = false">
+        <div class="cb-modal">
+          <button class="cb-close" @click="showCriarModal = false">×</button>
+
+          <h2 class="cb-title"><span>Criar</span> Bolão</h2>
+
+          <div class="cb-form">
+            <div class="cb-field">
+              <label class="cb-label">Classe</label>
+              <select v-model="novobolao.classe" class="cb-select">
+                <option value="A">Classe A — R$ 50</option>
+                <option value="B">Classe B — R$ 25</option>
+                <option value="C">Classe C — R$ 5</option>
+              </select>
+            </div>
+
+            <div class="cb-row">
+              <div class="cb-field">
+                <label class="cb-label">Hora de Abertura</label>
+                <input v-model="novobolao.hora_abertura" type="time" class="cb-input" />
+              </div>
+              <div class="cb-field">
+                <label class="cb-label">Hora do Sorteio</label>
+                <input v-model="novobolao.hora_sorteio" type="time" class="cb-input" />
+              </div>
+            </div>
+
+            <div class="cb-field">
+              <label class="cb-label">Máx. Participantes</label>
+              <input
+                v-model.number="novobolao.max_participantes"
+                type="number" min="2" max="100"
+                class="cb-input"
+              />
+            </div>
+
+            <p v-if="criarError" class="cb-error">{{ criarError }}</p>
+
+            <button class="cb-btn" :disabled="criando" @click="criarBolao">
+              <span v-if="criando" class="cb-spinner" />
+              <span v-if="criando">Criando…</span>
+              <span v-else>Criar Bolão</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </Transition>
+
+  </div>
+</template>

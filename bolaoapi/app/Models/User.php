@@ -7,11 +7,22 @@ use Tymon\JWTAuth\Contracts\JWTSubject;
 
 class User extends Authenticatable implements JWTSubject
 {
-    protected $fillable = ['username', 'email', 'password'];
+    protected $fillable = [
+        'username',
+        'email',
+        'password',
+        'chave_pix',
+        'is_admin',
+    ];
 
     protected $hidden = ['password'];
 
-   
+    protected $casts = [
+        'is_admin' => 'boolean',
+    ];
+
+    
+
     public function getJWTIdentifier()
     {
         return $this->getKey();
@@ -21,6 +32,8 @@ class User extends Authenticatable implements JWTSubject
     {
         return [];
     }
+
+    
 
     public function fichas()
     {

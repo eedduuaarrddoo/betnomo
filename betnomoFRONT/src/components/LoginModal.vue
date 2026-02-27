@@ -42,13 +42,12 @@ import { useRouter } from 'vue-router'
 const router = useRouter()
 
 async function handleSubmit() {
-  const success = await auth.login({
-    username: form.value.identifier,
-    password: form.value.password
-  })
-  if (success) {
+  try {
+    const redirectTo = await auth.login(form.value.identifier, form.value.password)
     close()
-    router.push('/dashboard')
+    router.push(redirectTo)
+  } catch {
+    
   }
 }
 

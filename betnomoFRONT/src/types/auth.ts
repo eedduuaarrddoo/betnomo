@@ -15,6 +15,8 @@ export interface AuthUser {
   username: string
   email: string
   token: string
+  is_admin: boolean
+  chave_pix: string | null 
 }
 
 export interface ApiResponse<T = unknown> {

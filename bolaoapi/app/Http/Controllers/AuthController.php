@@ -1,16 +1,11 @@
 <?php
-
 namespace App\Http\Controllers;
 
-use App\Models\User;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
-use Tymon\JWTAuth\Facades\JWTAuth;
-
 
 class AuthController extends Controller
 {
-   public function register(Request $request)
+    public function register(Request $request)
     {
         $request->validate([
             'username' => 'required|string|unique:users',
@@ -30,20 +25,32 @@ class AuthController extends Controller
     }
 
     public function login(Request $request)
-{
-    $request->validate([
-        'username' => 'required|string',
-        'password' => 'required',
-    ]);
+    {
+        $request->validate([
+            'username' => 'required|string',
+            'password' => 'required',
+        ]);
 
-    $credentials = $request->only('username', 'password');
+        $credentials = $request->only('username', 'password');
 
-    if (!$token = auth()->attempt($credentials)) {
-        return response()->json(['error' => 'Credenciais inválidas'], 401);
+        if (!$token = auth()->attempt($credentials)) {
+            return response()->json(['error' => 'Credenciais inválidas'], 401);
+        }
+
+        $user = auth()->user();
+
+        return response()->json([
+            'token'    => $token,
+            'is_admin' => (bool) $user->is_admin,   
+            'user'     => [
+                'id'       => $user->id,
+                'username' => $user->username,
+                'email'    => $user->email,
+                'is_admin' => (bool) $user->is_admin,
+            ],
+        ]);
     }
 
-    return response()->json(['token' => $token]);
-}
     public function logout()
     {
         auth()->logout();
@@ -52,6 +59,13 @@ class AuthController extends Controller
 
     public function me()
     {
-        return response()->json(auth()->user());
+        $user = auth()->user();
+
+        return response()->json([
+            'id'       => $user->id,
+            'username' => $user->username,
+            'email'    => $user->email,
+            'is_admin' => (bool) $user->is_admin,
+        ]);
     }
 }
