@@ -53,7 +53,7 @@ class FichaService
             return ['valida' => false, 'ficha' => $ficha, 'erro' => 'Esta ficha já foi utilizada.'];
         }
 
-        if ($ficha->user_id !== $userId) {
+        if ((int) $ficha->user_id !== (int) $userId) {
             return ['valida' => false, 'ficha' => $ficha, 'erro' => 'Esta ficha não pertence ao jogador informado.'];
         }
 

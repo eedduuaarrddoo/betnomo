@@ -2,7 +2,8 @@
 import { ref, computed, onMounted } from 'vue'
 import { useAuthStore } from '../stores/auth'
 import { useRouter } from 'vue-router'
-import '../assets/css/Adminhomeview.css'
+import BolaoCard, { type Bolao } from '../components/BolaoCard.vue'
+import '../assets/css/AdminHomeView.css'
 
 const auth   = useAuthStore()
 const router = useRouter()
@@ -17,17 +18,6 @@ const activeNav = ref('boloes')
 const filtroClasse = ref<'TODOS' | 'A' | 'B' | 'C'>('TODOS')
 
 // ── Bolões ────────────────────────────────────────────────────────────────────
-interface Bolao {
-  id: number
-  classe: string
-  hora_abertura: string
-  hora_sorteio: string
-  participantes: number
-  max_participantes: number
-  valor_total: number
-  status: 'aberto' | 'fechado'
-}
-
 const boloes        = ref<Bolao[]>([])
 const loadingBoloes = ref(false)
 
@@ -64,9 +54,9 @@ const criando        = ref(false)
 const criarError     = ref('')
 
 const novobolao = ref({
-  classe:           'C',
-  hora_abertura:    '',
-  hora_sorteio:     '',
+  classe:            'C',
+  hora_abertura:     '',
+  hora_sorteio:      '',
   max_participantes: 20,
 })
 
@@ -77,11 +67,8 @@ async function criarBolao() {
   try {
     const res  = await fetch(`${API}/admin/boloes`, {
       method:  'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token()}`,
-      },
-      body: JSON.stringify(novobolao.value),
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token()}` },
+      body:    JSON.stringify(novobolao.value),
     })
     const data = await res.json()
     if (!res.ok) throw new Error(data.message ?? 'Erro ao criar bolão')
@@ -114,22 +101,16 @@ async function sortear(bolaoId: number) {
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
-function progressPercent(b: Bolao) {
-  return Math.round((b.participantes / b.max_participantes) * 100)
-}
-
 const userInitial = computed(() =>
   auth.user?.username?.charAt(0).toUpperCase() || 'A'
 )
 
 function logout() {
   auth.logout()
-  router.push('/login')
+  router.push('/')
 }
 
-onMounted(() => {
-  carregarBoloes()
-})
+onMounted(() => carregarBoloes())
 </script>
 
 <template>
@@ -141,41 +122,29 @@ onMounted(() => {
 
       <p class="admin-section-title">Menu</p>
 
-      <button
-        :class="['admin-nav-btn', activeNav === 'boloes' ? 'active' : '']"
-        @click="activeNav = 'boloes'"
-      >
+      <button :class="['admin-nav-btn', activeNav === 'boloes' ? 'active' : '']" @click="activeNav = 'boloes'">
         <span class="nav-icon">🎲</span>
         Bolões
         <span class="admin-nav-badge">{{ stats.total }}</span>
       </button>
 
-      <button
-        :class="['admin-nav-btn', activeNav === 'usuarios' ? 'active' : '']"
-        @click="activeNav = 'usuarios'"
-      >
+      <button :class="['admin-nav-btn', activeNav === 'usuarios' ? 'active' : '']" @click="activeNav = 'usuarios'">
         <span class="nav-icon">👥</span>
         Usuários
       </button>
 
-      <button
-        :class="['admin-nav-btn', activeNav === 'fichas' ? 'active' : '']"
-        @click="activeNav = 'fichas'"
-      >
+      <button :class="['admin-nav-btn', activeNav === 'fichas' ? 'active' : '']" @click="activeNav = 'fichas'">
         <span class="nav-icon">🪙</span>
         Fichas
       </button>
 
       <div style="flex: 1" />
 
-      <!-- Card admin -->
       <div class="admin-user-card">
         <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
           <div class="admin-avatar">{{ userInitial }}</div>
           <div>
-            <p style="font-size: 0.8rem; color: #c8d3da; font-weight: 600;">
-              {{ auth.user?.username || 'Admin' }}
-            </p>
+            <p style="font-size: 0.8rem; color: #c8d3da; font-weight: 600;">{{ auth.user?.username || 'Admin' }}</p>
             <span class="admin-badge">Admin</span>
           </div>
         </div>
@@ -193,7 +162,6 @@ onMounted(() => {
     <!-- ── Main ───────────────────────────────────────────────────────────── -->
     <div class="admin-main">
 
-      <!-- Topbar -->
       <div class="admin-topbar">
         <div>
           <p class="admin-topbar-title">Dashboard Admin</p>
@@ -201,7 +169,6 @@ onMounted(() => {
         </div>
       </div>
 
-      <!-- Conteúdo -->
       <div class="admin-content">
 
         <!-- Stats -->
@@ -230,9 +197,7 @@ onMounted(() => {
 
           <div class="admin-section-header">
             <span class="admin-section-label">Bolões</span>
-            <button class="btn-criar-bolao" @click="showCriarModal = true">
-              + Criar Bolão
-            </button>
+            <button class="btn-criar-bolao" @click="showCriarModal = true">+ Criar Bolão</button>
           </div>
 
           <!-- Filtro -->
@@ -247,83 +212,64 @@ onMounted(() => {
             </button>
           </div>
 
-          <!-- Tabela -->
-          <div class="admin-table-wrap">
-            <table class="admin-table">
-              <thead>
-                <tr>
-                  <th>Classe</th>
-                  <th>Abertura</th>
-                  <th>Sorteio</th>
-                  <th>Participantes</th>
-                  <th>Progresso</th>
-                  <th>Prêmio</th>
-                  <th>Status</th>
-                  <th>Ação</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr v-if="loadingBoloes">
-                  <td colspan="8" style="text-align:center; color:#3d4d5a; padding: 24px;">
-                    Carregando…
-                  </td>
-                </tr>
-                <tr v-else-if="boloesFiltrados.length === 0">
-                  <td colspan="8" class="admin-empty">Nenhum bolão encontrado.</td>
-                </tr>
-                <tr v-for="bolao in boloesFiltrados" :key="bolao.id">
-                  <td>
-                    <span :class="['classe-badge', bolao.classe]">{{ bolao.classe }}</span>
-                  </td>
-                  <td>{{ bolao.hora_abertura }}</td>
-                  <td>{{ bolao.hora_sorteio }}</td>
-                  <td style="color:#f0a500;">
-                    {{ bolao.participantes }}/{{ bolao.max_participantes }}
-                  </td>
-                  <td>
-                    <div class="table-progress">
-                      <div
-                        class="table-progress-fill"
-                        :style="{ width: progressPercent(bolao) + '%' }"
-                      />
-                    </div>
-                  </td>
-                  <td style="color:#3dd68c;">{{ bolao.valor_total }} fichas</td>
-                  <td>
-                    <span :class="['status-pill', bolao.status]">
-                      {{ bolao.status === 'aberto' ? 'Aberto' : 'Fechado' }}
-                    </span>
-                  </td>
-                  <td>
-                    <button
-                      class="btn-sortear"
-                      :disabled="bolao.status === 'aberto' || bolao.participantes === 0"
-                      @click="sortear(bolao.id)"
-                    >
-                      Sortear
-                    </button>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
+          <!-- Grid de cards -->
+          <div v-if="loadingBoloes" class="boloes-grid">
+            <div v-for="n in 3" :key="n" class="bolao-card" style="opacity: 0.4; pointer-events: none;">
+              <div class="bolao-card-header">
+                <span class="bolao-class-tag">…</span>
+                <span class="bolao-status aberto">…</span>
+              </div>
+              <div class="bolao-card-body">
+                <div class="bolao-info-row"><span>Abertura</span><span>--:--</span></div>
+                <div class="bolao-info-row"><span>Participantes</span><span>-/-</span></div>
+                <div class="bolao-info-row"><span>Prêmio</span><span>-</span></div>
+                <div class="bolao-progress-bar"><div class="bolao-progress-fill" style="width:0%" /></div>
+                <div class="bolao-sorteio-time">--:--</div>
+                <button class="bolao-btn" disabled>…</button>
+              </div>
+            </div>
           </div>
+
+          <div v-else-if="boloesFiltrados.length === 0" class="admin-empty">
+            <p style="font-size: 2rem; margin-bottom: 8px;">🎲</p>
+            <p>Nenhum bolão encontrado.</p>
+          </div>
+
+          <!-- BolaoCard com slot "acao" substituindo o botão por "Sortear" -->
+          <div v-else class="boloes-grid">
+            <BolaoCard
+              v-for="bolao in boloesFiltrados"
+              :key="bolao.id"
+              :bolao="bolao"
+            >
+              <template #acao>
+                <button
+                  class="bolao-btn"
+                  :disabled="bolao.status === 'aberto' || bolao.participantes === 0"
+                  @click="sortear(bolao.id)"
+                >
+                  🏆 Sortear
+                </button>
+              </template>
+            </BolaoCard>
+          </div>
+
         </div>
 
         <!-- Placeholder outras seções -->
         <div v-else class="admin-empty" style="margin-top: 40px;">
-          <p style="font-size:2rem; margin-bottom:8px;">🚧</p>
+          <p style="font-size: 2rem; margin-bottom: 8px;">🚧</p>
           <p>Seção em construção</p>
         </div>
 
       </div>
     </div>
 
-    <!-- ── Modal Criar Bolão ────────────────────────────────────────────── -->
+    <!-- ── Modal Criar Bolão ───────────────────────────────────────────────── -->
     <Transition name="modal-fade">
       <div v-if="showCriarModal" class="cb-overlay" @click.self="showCriarModal = false">
         <div class="cb-modal">
           <button class="cb-close" @click="showCriarModal = false">×</button>
-
           <h2 class="cb-title"><span>Criar</span> Bolão</h2>
 
           <div class="cb-form">
@@ -349,11 +295,7 @@ onMounted(() => {
 
             <div class="cb-field">
               <label class="cb-label">Máx. Participantes</label>
-              <input
-                v-model.number="novobolao.max_participantes"
-                type="number" min="2" max="100"
-                class="cb-input"
-              />
+              <input v-model.number="novobolao.max_participantes" type="number" min="2" max="100" class="cb-input" />
             </div>
 
             <p v-if="criarError" class="cb-error">{{ criarError }}</p>

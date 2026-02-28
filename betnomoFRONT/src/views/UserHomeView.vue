@@ -3,6 +3,7 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { useAuthStore } from '../stores/auth'
 import '../assets/css/userhome.css'
 import ComprarFichaModal from '../components/ComprarFichaModal.vue'
+import BolaoCard, { type Bolao } from '../components/BolaoCard.vue'
 
 const auth = useAuthStore()
 
@@ -23,24 +24,13 @@ const classeAtiva = computed(
 )
 
 // ── Bolões ────────────────────────────────────────────────────────────────────
-interface Bolao {
-  id: number
-  classe: string
-  hora_abertura: string
-  hora_sorteio: string
-  participantes: number
-  max_participantes: number
-  valor_total: number
-  status: 'aberto' | 'fechado'
-}
-
 const boloes        = ref<Bolao[]>([])
 const loadingBoloes = ref(false)
 
 async function carregarBoloes() {
   loadingBoloes.value = true
   try {
-    const res  = await fetch(`${API}/boloes?classe=${classeAtiva.value}`, {
+    const res = await fetch(`${API}/boloes?classe=${classeAtiva.value}`, {
       headers: { Authorization: `Bearer ${token()}` },
     })
     boloes.value = await res.json()
@@ -51,7 +41,6 @@ async function carregarBoloes() {
   }
 }
 
-// Recarrega toda vez que o usuário troca de categoria
 watch(activeCategory, () => carregarBoloes())
 
 // ── Fichas ────────────────────────────────────────────────────────────────────
@@ -84,23 +73,10 @@ function onFichaCreated() {
   carregarFichas()
 }
 
-// ── Helpers de exibição ───────────────────────────────────────────────────────
-function getClassTag(classe: string) {
-  if (classe === 'A') return 'gold'
-  if (classe === 'B') return 'silver'
-  return ''
-}
 
-function getClassLabel(classe: string) {
-  const map: Record<string, string> = { A: 'Classe A', B: 'Classe B', C: 'Classe C' }
-  return map[classe] ?? classe
-}
 
-function progressPercent(b: Bolao) {
-  return Math.round((b.participantes / b.max_participantes) * 100)
-}
 
-// contagem por categoria para o badge da sidebar
+// ── Sidebar helpers ───────────────────────────────────────────────────────────
 const countPorClasse = computed(() => {
   const map: Record<string, number> = { A: 0, B: 0, C: 0 }
   boloes.value.forEach(b => { map[b.classe] = (map[b.classe] ?? 0) + 1 })
@@ -139,7 +115,6 @@ onMounted(() => {
       <div style="flex: 1" />
 
       <div class="player-card">
-
         <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 4px;">
           <div class="player-avatar">{{ userInitial }}</div>
           <div>
@@ -249,7 +224,13 @@ onMounted(() => {
       <div class="boloes-grid">
 
         <!-- Loading skeleton -->
-        <div v-if="loadingBoloes" v-for="n in 3" :key="n" class="bolao-card" style="opacity: 0.4; pointer-events: none;">
+        <div
+          v-if="loadingBoloes"
+          v-for="n in 3"
+          :key="n"
+          class="bolao-card"
+          style="opacity: 0.4; pointer-events: none;"
+        >
           <div class="bolao-card-header">
             <span class="bolao-class-tag">…</span>
             <span class="bolao-status aberto">…</span>
@@ -264,56 +245,13 @@ onMounted(() => {
           </div>
         </div>
 
-        <!-- Bolões reais vindos da API -->
-        <div
-          v-if="!loadingBoloes"
+        
+        <BolaoCard
           v-for="bolao in boloes"
           :key="bolao.id"
-          class="bolao-card"
-        >
-          <div class="bolao-card-header">
-            <span :class="['bolao-class-tag', getClassTag(bolao.classe)]">
-              {{ getClassLabel(bolao.classe) }}
-            </span>
-            <span :class="['bolao-status', bolao.status]">
-              {{ bolao.status === 'aberto' ? 'Aberto' : 'Fechado' }}
-            </span>
-          </div>
-
-          <div class="bolao-card-body">
-            <div class="bolao-info-row">
-              <span>Abertura</span>
-              <span>{{ bolao.hora_abertura }}</span>
-            </div>
-            <div class="bolao-info-row">
-              <span>Participantes</span>
-              <span>{{ bolao.participantes }}/{{ bolao.max_participantes }}</span>
-            </div>
-            <div class="bolao-info-row">
-              <span>Prêmio</span>
-              <span style="color: #f0a500;">{{ bolao.valor_total }} fichas</span>
-            </div>
-
-            <div class="bolao-progress-bar">
-              <div
-                class="bolao-progress-fill"
-                :style="{ width: progressPercent(bolao) + '%' }"
-              />
-            </div>
-
-            <div class="bolao-sorteio-time">
-              <span style="font-size: 0.6rem; color: #6b7b8a; font-family: 'Exo 2', sans-serif; font-weight: 500; letter-spacing: 0.05em; text-transform: uppercase;">Sorteio</span>
-              {{ bolao.hora_sorteio }}
-            </div>
-
-            <button
-              class="bolao-btn"
-              :disabled="bolao.status === 'fechado'"
-            >
-              {{ bolao.status === 'aberto' ? 'Participar' : 'Encerrado' }}
-            </button>
-          </div>
-        </div>
+          :bolao="bolao"
+          @participou="() => { carregarFichas(); carregarBoloes(); }"
+        />
 
         <div v-if="!loadingBoloes && boloes.length === 0" class="empty-state">
           <p style="font-size: 2rem; margin-bottom: 8px;">🎲</p>

@@ -27,8 +27,7 @@ export const useAuthStore = defineStore('auth', () => {
 
   const isAuthenticated = () => !!token.value
 
-  // ── Login ─────────────────────────────────────────────────────────────────
-  // Retorna '/admin' ou '/home' para o router redirecionar
+ 
   async function login(username: string, password: string): Promise<string> {
     isLoading.value = true
     error.value     = null
@@ -52,7 +51,7 @@ export const useAuthStore = defineStore('auth', () => {
       localStorage.setItem('auth_token', data.token)
 
       // Redirecionamento baseado no is_admin vindo do backend
-      return data.is_admin ? '/admin' : '/home'
+      return data.is_admin ? '/admin' : '/dashboard'
 
     } catch (e: any) {
       if (!error.value) error.value = e.message

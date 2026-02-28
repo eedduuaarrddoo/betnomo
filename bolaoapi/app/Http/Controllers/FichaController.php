@@ -16,10 +16,6 @@ class FichaController extends Controller
         $this->fichaService = $fichaService;
     }
 
-    /**
-     * GET /api/fichas
-     * Retorna todas as fichas do usuário logado agrupadas por tipo.
-     */
     public function index(Request $request): JsonResponse
     {
         $fichas = $request->user()
@@ -40,10 +36,7 @@ class FichaController extends Controller
         ]);
     }
 
-    /**
-     * POST /api/fichas/gerar-qr
-     * Body: { "tipo": "A" | "B" | "C" }
-     */
+    
     public function gerarQr(Request $request): JsonResponse
     {
         $request->validate(['tipo' => 'required|in:A,B,C']);
@@ -63,10 +56,7 @@ class FichaController extends Controller
         ]);
     }
 
-    /**
-     * POST /api/fichas/confirmar
-     * Body: { "tipo": "A" | "B" | "C", "referencia": "<uuid>" }
-     */
+   
     public function confirmar(Request $request): JsonResponse
     {
         $request->validate([
@@ -87,10 +77,7 @@ class FichaController extends Controller
         ], 201);
     }
 
-    /**
-     * POST /api/fichas/validar
-     * Body: { "token": "<uuid>" }
-     */
+    
     public function validar(Request $request): JsonResponse
     {
         $request->validate(['token' => 'required|string']);

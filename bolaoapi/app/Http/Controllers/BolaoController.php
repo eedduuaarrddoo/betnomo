@@ -3,12 +3,17 @@
 namespace App\Http\Controllers;
 
 use App\Models\Bolao;
+use App\Services\FichaService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class BolaoController extends Controller
 {
-    
+    // Sem construtor — FichaService injetado só onde precisa
+
+    /**
+     * GET /api/boloes?classe=C
+     */
     public function index(Request $request): JsonResponse
     {
         $query = Bolao::where('sorteado', false);
@@ -22,14 +27,18 @@ class BolaoController extends Controller
         return response()->json($this->formatarBoloes($boloes));
     }
 
-   
+    /**
+     * GET /api/admin/dashboard
+     */
     public function adminDashboard(): JsonResponse
     {
         $boloes = Bolao::orderBy('created_at', 'desc')->get();
         return response()->json($this->formatarBoloes($boloes));
     }
 
-    
+    /**
+     * POST /api/admin/boloes
+     */
     public function store(Request $request): JsonResponse
     {
         $request->validate([
@@ -58,8 +67,57 @@ class BolaoController extends Controller
     }
 
     /**
+     * POST /api/boloes/{id}/participar
+     * FichaService injetado diretamente no método — não afeta outras rotas
+     */
+    public function participar(Request $request, int $id, FichaService $fichaService): JsonResponse
+    {
+        $request->validate([
+            'token' => 'required|string',
+        ]);
+
+        $bolao  = Bolao::findOrFail($id);
+        $userId = $request->user()->id;
+
+        if ($bolao->sorteado) {
+            return response()->json(['error' => 'Este bolão já foi sorteado.'], 422);
+        }
+
+        $qtdAtual = count($bolao->participantes ?? []);
+        if ($qtdAtual >= $bolao->max_participantes) {
+            return response()->json(['error' => 'Este bolão está cheio.'], 422);
+        }
+
+        if ($bolao->temParticipante($userId)) {
+            return response()->json(['error' => 'Você já está participando deste bolão.'], 422);
+        }
+
+        $resultado = $fichaService->validarFicha($request->token, $userId);
+
+        if (!$resultado['valida']) {
+            return response()->json(['error' => $resultado['erro']], 422);
+        }
+
+        $ficha = $resultado['ficha'];
+
+        if ($ficha->tipo !== $bolao->classe) {
+            return response()->json([
+                'error' => "Este bolão exige uma ficha Classe {$bolao->classe}. Sua ficha é Classe {$ficha->tipo}.",
+            ], 422);
+        }
+
+        $bolao->adicionarParticipante($userId, $ficha);
+        $fichaService->usarFicha($ficha);
+
+        return response()->json([
+            'message'       => 'Participação confirmada!',
+            'bolao_id'      => $bolao->id,
+            'participantes' => count($bolao->fresh()->participantes),
+        ]);
+    }
+
+    /**
      * POST /api/admin/boloes/{id}/sortear
-     * Realiza o sorteio: escolhe um participante aleatório como vencedor.
      */
     public function sortear(int $id): JsonResponse
     {
@@ -85,8 +143,8 @@ class BolaoController extends Controller
         $vencedor = \App\Models\User::find($vencedorId);
 
         return response()->json([
-            'message'    => 'Sorteio realizado com sucesso!',
-            'vencedor' => $vencedor ? $vencedor->username : 'Desconhecido',
+            'message'     => 'Sorteio realizado com sucesso!',
+            'vencedor'    => $vencedor ? $vencedor->username : 'Desconhecido',
             'vencedor_id' => $vencedorId,
         ]);
     }

@@ -66,7 +66,7 @@ function handleLogout() {
         </template>
         <template v-else>
           <span class="text-sm text-hon-text font-medium">
-            {{ auth.user?.displayName || auth.user?.username }}
+            {{ auth.user?.email || auth.user?.username }}
           </span>
           <BaseButton variant="ghost" @click="handleLogout">
             Sair

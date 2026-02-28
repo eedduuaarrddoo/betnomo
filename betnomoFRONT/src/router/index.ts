@@ -34,7 +34,7 @@ const router = createRouter({
 router.beforeEach((to) => {
   const auth = useAuthStore()
 
-  // Rota protegida e não autenticado → vai para home
+  
   if (to.meta.requiresAuth && !auth.token) {
     return { name: 'home' }
   }

@@ -13,6 +13,8 @@ Route::middleware('auth:api')->group(function () {
     Route::get('/me',      [AuthController::class, 'me']);
 
     Route::get('/boloes', [BolaoController::class, 'index']);
+    Route::post('/boloes/{id}/participar',     [BolaoController::class, 'participar']);
+
     
     Route::prefix('fichas')->group(function () {
         Route::get('/',          [FichaController::class, 'index']);
