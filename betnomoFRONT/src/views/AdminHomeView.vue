@@ -11,13 +11,9 @@ const router = useRouter()
 const API   = import.meta.env.VITE_API_URL ?? '/api'
 const token = () => localStorage.getItem('auth_token') ?? ''
 
-// ── Navegação da sidebar ──────────────────────────────────────────────────────
-const activeNav = ref('boloes')
-
-// ── Filtro de classe ──────────────────────────────────────────────────────────
+const activeNav    = ref('boloes')
 const filtroClasse = ref<'TODOS' | 'A' | 'B' | 'C'>('TODOS')
 
-// ── Bolões ────────────────────────────────────────────────────────────────────
 const boloes        = ref<Bolao[]>([])
 const loadingBoloes = ref(false)
 
@@ -34,13 +30,12 @@ async function carregarBoloes() {
     })
     boloes.value = await res.json()
   } catch (e) {
-    console.error('Erro ao carregar bolões:', e)
+    console.error('Erro ao carregar boloes:', e)
   } finally {
     loadingBoloes.value = false
   }
 }
 
-// ── Stats ─────────────────────────────────────────────────────────────────────
 const stats = computed(() => ({
   total:    boloes.value.length,
   abertos:  boloes.value.filter(b => b.status === 'aberto').length,
@@ -48,7 +43,7 @@ const stats = computed(() => ({
   fichas:   boloes.value.reduce((acc, b) => acc + b.valor_total, 0),
 }))
 
-// ── Modal criar bolão ─────────────────────────────────────────────────────────
+// ── Modal criar bolao ─────────────────────────────────────────────────────────
 const showCriarModal = ref(false)
 const criando        = ref(false)
 const criarError     = ref('')
@@ -71,7 +66,7 @@ async function criarBolao() {
       body:    JSON.stringify(novobolao.value),
     })
     const data = await res.json()
-    if (!res.ok) throw new Error(data.message ?? 'Erro ao criar bolão')
+    if (!res.ok) throw new Error(data.message ?? 'Erro ao criar bolao')
 
     showCriarModal.value = false
     novobolao.value = { classe: 'C', hora_abertura: '', hora_sorteio: '', max_participantes: 20 }
@@ -83,24 +78,6 @@ async function criarBolao() {
   }
 }
 
-// ── Sortear ───────────────────────────────────────────────────────────────────
-async function sortear(bolaoId: number) {
-  if (!confirm('Confirmar sorteio deste bolão?')) return
-  try {
-    const res  = await fetch(`${API}/admin/boloes/${bolaoId}/sortear`, {
-      method:  'POST',
-      headers: { Authorization: `Bearer ${token()}` },
-    })
-    const data = await res.json()
-    if (!res.ok) throw new Error(data.message ?? 'Erro ao sortear')
-    alert(`🏆 Vencedor: ${data.vencedor}`)
-    await carregarBoloes()
-  } catch (e: any) {
-    alert(e.message)
-  }
-}
-
-// ── Helpers ───────────────────────────────────────────────────────────────────
 const userInitial = computed(() =>
   auth.user?.username?.charAt(0).toUpperCase() || 'A'
 )
@@ -116,7 +93,6 @@ onMounted(() => carregarBoloes())
 <template>
   <div class="admin-layout">
 
-    <!-- ── Sidebar ─────────────────────────────────────────────────────────── -->
     <aside class="admin-sidebar">
       <div class="admin-logo"><span>Adm </span>Juvio</div>
 
@@ -124,13 +100,13 @@ onMounted(() => carregarBoloes())
 
       <button :class="['admin-nav-btn', activeNav === 'boloes' ? 'active' : '']" @click="activeNav = 'boloes'">
         <span class="nav-icon">🎲</span>
-        Bolões
+        Boloes
         <span class="admin-nav-badge">{{ stats.total }}</span>
       </button>
 
       <button :class="['admin-nav-btn', activeNav === 'usuarios' ? 'active' : '']" @click="activeNav = 'usuarios'">
         <span class="nav-icon">👥</span>
-        Usuários
+        Usuarios
       </button>
 
       <button :class="['admin-nav-btn', activeNav === 'fichas' ? 'active' : '']" @click="activeNav = 'fichas'">
@@ -159,22 +135,20 @@ onMounted(() => carregarBoloes())
       </div>
     </aside>
 
-    <!-- ── Main ───────────────────────────────────────────────────────────── -->
     <div class="admin-main">
 
       <div class="admin-topbar">
         <div>
           <p class="admin-topbar-title">Dashboard Admin</p>
-          <p class="admin-topbar-sub">Gerencie bolões e acompanhe os resultados</p>
+          <p class="admin-topbar-sub">Gerencie boloes e acompanhe os resultados</p>
         </div>
       </div>
 
       <div class="admin-content">
 
-        <!-- Stats -->
         <div class="admin-stats-grid">
           <div class="admin-stat-card gold">
-            <p class="stat-label">Total de Bolões</p>
+            <p class="stat-label">Total de Boloes</p>
             <p class="stat-value gold">{{ stats.total }}</p>
           </div>
           <div class="admin-stat-card green">
@@ -188,19 +162,17 @@ onMounted(() => carregarBoloes())
           <div class="admin-stat-card silver">
             <p class="stat-label">Fichas em Jogo</p>
             <p class="stat-value">{{ stats.fichas }}</p>
-            <p class="stat-sub">soma dos prêmios</p>
+            <p class="stat-sub">soma dos premios</p>
           </div>
         </div>
 
-        <!-- Seção bolões -->
         <div v-if="activeNav === 'boloes'">
 
           <div class="admin-section-header">
-            <span class="admin-section-label">Bolões</span>
-            <button class="btn-criar-bolao" @click="showCriarModal = true">+ Criar Bolão</button>
+            <span class="admin-section-label">Boloes</span>
+            <button class="btn-criar-bolao" @click="showCriarModal = true">+ Criar Bolao</button>
           </div>
 
-          <!-- Filtro -->
           <div class="admin-filter-tabs">
             <button
               v-for="c in ['TODOS', 'A', 'B', 'C']"
@@ -212,73 +184,61 @@ onMounted(() => carregarBoloes())
             </button>
           </div>
 
-          <!-- Grid de cards -->
           <div v-if="loadingBoloes" class="boloes-grid">
             <div v-for="n in 3" :key="n" class="bolao-card" style="opacity: 0.4; pointer-events: none;">
               <div class="bolao-card-header">
-                <span class="bolao-class-tag">…</span>
-                <span class="bolao-status aberto">…</span>
+                <span class="bolao-class-tag">...</span>
+                <span class="bolao-status aberto">...</span>
               </div>
               <div class="bolao-card-body">
                 <div class="bolao-info-row"><span>Abertura</span><span>--:--</span></div>
                 <div class="bolao-info-row"><span>Participantes</span><span>-/-</span></div>
-                <div class="bolao-info-row"><span>Prêmio</span><span>-</span></div>
+                <div class="bolao-info-row"><span>Premio</span><span>-</span></div>
                 <div class="bolao-progress-bar"><div class="bolao-progress-fill" style="width:0%" /></div>
                 <div class="bolao-sorteio-time">--:--</div>
-                <button class="bolao-btn" disabled>…</button>
+                <button class="bolao-btn" disabled>...</button>
               </div>
             </div>
           </div>
 
           <div v-else-if="boloesFiltrados.length === 0" class="admin-empty">
             <p style="font-size: 2rem; margin-bottom: 8px;">🎲</p>
-            <p>Nenhum bolão encontrado.</p>
+            <p>Nenhum bolao encontrado.</p>
           </div>
 
-          <!-- BolaoCard com slot "acao" substituindo o botão por "Sortear" -->
+          <!-- BolaoCard decide o botao com base em bolao.acao vindo do backend -->
           <div v-else class="boloes-grid">
             <BolaoCard
               v-for="bolao in boloesFiltrados"
               :key="bolao.id"
               :bolao="bolao"
-            >
-              <template #acao>
-                <button
-                  class="bolao-btn"
-                  :disabled="bolao.status === 'aberto' || bolao.participantes === 0"
-                  @click="sortear(bolao.id)"
-                >
-                  🏆 Sortear
-                </button>
-              </template>
-            </BolaoCard>
+              @atualizar="carregarBoloes"
+            />
           </div>
 
         </div>
 
-        <!-- Placeholder outras seções -->
         <div v-else class="admin-empty" style="margin-top: 40px;">
           <p style="font-size: 2rem; margin-bottom: 8px;">🚧</p>
-          <p>Seção em construção</p>
+          <p>Secao em construcao</p>
         </div>
 
       </div>
     </div>
 
-    <!-- ── Modal Criar Bolão ───────────────────────────────────────────────── -->
     <Transition name="modal-fade">
       <div v-if="showCriarModal" class="cb-overlay" @click.self="showCriarModal = false">
         <div class="cb-modal">
-          <button class="cb-close" @click="showCriarModal = false">×</button>
-          <h2 class="cb-title"><span>Criar</span> Bolão</h2>
+          <button class="cb-close" @click="showCriarModal = false">x</button>
+          <h2 class="cb-title"><span>Criar</span> Bolao</h2>
 
           <div class="cb-form">
             <div class="cb-field">
               <label class="cb-label">Classe</label>
               <select v-model="novobolao.classe" class="cb-select">
-                <option value="A">Classe A — R$ 50</option>
-                <option value="B">Classe B — R$ 25</option>
-                <option value="C">Classe C — R$ 5</option>
+                <option value="A">Classe A - R$ 50</option>
+                <option value="B">Classe B - R$ 25</option>
+                <option value="C">Classe C - R$ 5</option>
               </select>
             </div>
 
@@ -294,7 +254,7 @@ onMounted(() => carregarBoloes())
             </div>
 
             <div class="cb-field">
-              <label class="cb-label">Máx. Participantes</label>
+              <label class="cb-label">Max. Participantes</label>
               <input v-model.number="novobolao.max_participantes" type="number" min="2" max="100" class="cb-input" />
             </div>
 
@@ -302,8 +262,8 @@ onMounted(() => carregarBoloes())
 
             <button class="cb-btn" :disabled="criando" @click="criarBolao">
               <span v-if="criando" class="cb-spinner" />
-              <span v-if="criando">Criando…</span>
-              <span v-else>Criar Bolão</span>
+              <span v-if="criando">Criando...</span>
+              <span v-else>Criar Bolao</span>
             </button>
           </div>
         </div>

@@ -10,11 +10,10 @@ const auth = useAuthStore()
 const API   = import.meta.env.VITE_API_URL ?? '/api'
 const token = () => localStorage.getItem('auth_token') ?? ''
 
-// ── Categorias / filtro ───────────────────────────────────────────────────────
 const categories = [
-  { id: 'classe-a', label: 'Bolão Classe A', emoji: '🥇', classe: 'A' },
-  { id: 'classe-b', label: 'Bolão Classe B', emoji: '🥈', classe: 'B' },
-  { id: 'classe-c', label: 'Bolão Classe C', emoji: '🥉', classe: 'C' },
+  { id: 'classe-a', label: 'Bolao Classe A', emoji: 'ouro', classe: 'A' },
+  { id: 'classe-b', label: 'Bolao Classe B', emoji: 'prata', classe: 'B' },
+  { id: 'classe-c', label: 'Bolao Classe C', emoji: 'bronze', classe: 'C' },
 ]
 
 const activeCategory = ref('classe-a')
@@ -23,7 +22,6 @@ const classeAtiva = computed(
   () => categories.find(c => c.id === activeCategory.value)?.classe ?? 'A'
 )
 
-// ── Bolões ────────────────────────────────────────────────────────────────────
 const boloes        = ref<Bolao[]>([])
 const loadingBoloes = ref(false)
 
@@ -35,7 +33,7 @@ async function carregarBoloes() {
     })
     boloes.value = await res.json()
   } catch (e) {
-    console.error('Erro ao carregar bolões:', e)
+    console.error('Erro ao carregar boloes:', e)
   } finally {
     loadingBoloes.value = false
   }
@@ -43,7 +41,6 @@ async function carregarBoloes() {
 
 watch(activeCategory, () => carregarBoloes())
 
-// ── Fichas ────────────────────────────────────────────────────────────────────
 interface ResumoFichas { A: number; B: number; C: number }
 
 const fichasResumo  = ref<ResumoFichas>({ A: 0, B: 0, C: 0 })
@@ -66,17 +63,17 @@ async function carregarFichas() {
   }
 }
 
-// ── Modal compra ──────────────────────────────────────────────────────────────
+function onAtualizar() {
+  carregarFichas()
+  carregarBoloes()
+}
+
 const showComprarModal = ref(false)
 
 function onFichaCreated() {
   carregarFichas()
 }
 
-
-
-
-// ── Sidebar helpers ───────────────────────────────────────────────────────────
 const countPorClasse = computed(() => {
   const map: Record<string, number> = { A: 0, B: 0, C: 0 }
   boloes.value.forEach(b => { map[b.classe] = (map[b.classe] ?? 0) + 1 })
@@ -130,7 +127,7 @@ onMounted(() => {
           <div>
             <p style="font-size: 0.65rem; color: #6b7b8a; line-height: 1;">Fichas</p>
             <p style="font-family: 'Cinzel', serif; font-size: 1rem; font-weight: 700; color: #f0a500; line-height: 1.3;">
-              <span v-if="loadingFichas">…</span>
+              <span v-if="loadingFichas">...</span>
               <span v-else>{{ fichasTotal }}</span>
             </p>
           </div>
@@ -143,15 +140,11 @@ onMounted(() => {
           </button>
         </div>
 
-        <div
-          v-if="!loadingFichas && fichasTotal > 0"
-          style="display: flex; gap: 6px; margin-top: 8px;"
-        >
+        <div v-if="!loadingFichas && fichasTotal > 0" style="display: flex; gap: 6px; margin-top: 8px;">
           <div
             v-for="tipo in (['A', 'B', 'C'] as const)"
             :key="tipo"
-            style="flex: 1; background: rgba(13,17,23,0.6); border-radius: 6px;
-                   padding: 5px 4px; text-align: center;"
+            style="flex: 1; background: rgba(13,17,23,0.6); border-radius: 6px; padding: 5px 4px; text-align: center;"
           >
             <p style="font-size: 0.58rem; color: #6b7b8a; margin-bottom: 2px; text-transform: uppercase;">
               Classe {{ tipo }}
@@ -166,7 +159,7 @@ onMounted(() => {
         </div>
 
         <div style="margin-top: 10px; padding-top: 10px; border-top: 1px solid rgba(30,36,40,0.8);">
-          <p style="font-size: 0.68rem; color: #6b7b8a; margin-bottom: 4px;">Bolões ativos</p>
+          <p style="font-size: 0.68rem; color: #6b7b8a; margin-bottom: 4px;">Boloes ativos</p>
           <p style="font-family: 'Cinzel', serif; font-size: 1.1rem; font-weight: 700; color: #c8d3da;">0</p>
         </div>
       </div>
@@ -184,7 +177,7 @@ onMounted(() => {
           />
           <div class="banner-main-overlay">
             <p style="font-size: 0.7rem; color: #3dd68c; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 4px;">
-              Bolões Abertos
+              Boloes Abertos
             </p>
             <p style="font-family: 'Cinzel', serif; font-size: 1.4rem; font-weight: 700; color: white; line-height: 1.2;">
               Participe agora<br/>
@@ -196,14 +189,14 @@ onMounted(() => {
         <div class="banner-side">
           <div class="banner-side-card">
             <div style="text-align: center;">
-              <p style="font-size: 1.5rem; margin-bottom: 4px;">🎁</p>
-              <p style="font-family: 'Cinzel', serif; font-size: 0.8rem; font-weight: 700; color: #f0a500;">1 Ficha Grátis</p>
+              <p style="font-size: 1.5rem; margin-bottom: 4px;">presente</p>
+              <p style="font-family: 'Cinzel', serif; font-size: 0.8rem; font-weight: 700; color: #f0a500;">1 Ficha Gratis</p>
               <p style="font-size: 0.68rem; color: #6b7b8a; margin-top: 2px;">ao criar conta</p>
             </div>
           </div>
           <div class="banner-side-card">
             <div style="text-align: center;">
-              <p style="font-size: 1.5rem; margin-bottom: 4px;">🏆</p>
+              <p style="font-size: 1.5rem; margin-bottom: 4px;">trofeu</p>
               <p style="font-family: 'Cinzel', serif; font-size: 0.8rem; font-weight: 700; color: #3dd68c;">Sempre 1 ganha</p>
               <p style="font-size: 0.68rem; color: #6b7b8a; margin-top: 2px;">em cada rodada</p>
             </div>
@@ -216,46 +209,39 @@ onMounted(() => {
           {{ categories.find(c => c.id === activeCategory)?.label }}
         </span>
         <span style="font-size: 0.75rem; color: #3d4d5a;">
-          <span v-if="loadingBoloes">Carregando…</span>
-          <span v-else>{{ boloes.length }} bolões disponíveis</span>
+          <span v-if="loadingBoloes">Carregando...</span>
+          <span v-else>{{ boloes.length }} boloes disponiveis</span>
         </span>
       </div>
 
       <div class="boloes-grid">
 
-        <!-- Loading skeleton -->
-        <div
-          v-if="loadingBoloes"
-          v-for="n in 3"
-          :key="n"
-          class="bolao-card"
-          style="opacity: 0.4; pointer-events: none;"
-        >
+        <div v-if="loadingBoloes" v-for="n in 3" :key="n" class="bolao-card" style="opacity: 0.4; pointer-events: none;">
           <div class="bolao-card-header">
-            <span class="bolao-class-tag">…</span>
-            <span class="bolao-status aberto">…</span>
+            <span class="bolao-class-tag">...</span>
+            <span class="bolao-status aberto">...</span>
           </div>
           <div class="bolao-card-body">
             <div class="bolao-info-row"><span>Abertura</span><span>--:--</span></div>
             <div class="bolao-info-row"><span>Participantes</span><span>-/-</span></div>
-            <div class="bolao-info-row"><span>Prêmio</span><span>-</span></div>
+            <div class="bolao-info-row"><span>Premio</span><span>-</span></div>
             <div class="bolao-progress-bar"><div class="bolao-progress-fill" style="width: 0%" /></div>
             <div class="bolao-sorteio-time">--:--</div>
-            <button class="bolao-btn" disabled>…</button>
+            <button class="bolao-btn" disabled>...</button>
           </div>
         </div>
 
-        
         <BolaoCard
+          v-if="!loadingBoloes"
           v-for="bolao in boloes"
           :key="bolao.id"
           :bolao="bolao"
-          @participou="() => { carregarFichas(); carregarBoloes(); }"
+          @atualizar="onAtualizar"
         />
 
         <div v-if="!loadingBoloes && boloes.length === 0" class="empty-state">
-          <p style="font-size: 2rem; margin-bottom: 8px;">🎲</p>
-          <p style="font-size: 0.9rem;">Nenhum bolão disponível nesta categoria</p>
+          <p style="font-size: 2rem; margin-bottom: 8px;">dados</p>
+          <p style="font-size: 0.9rem;">Nenhum bolao disponivel nesta categoria</p>
         </div>
       </div>
 
