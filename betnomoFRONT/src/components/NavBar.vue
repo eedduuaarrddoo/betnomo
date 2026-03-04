@@ -34,16 +34,16 @@ function handleLogout() {
     <div class="max-w-7xl mx-auto px-4 sm:px-6 h-full flex items-center justify-between gap-6">
 
       <RouterLink to="/" class="flex items-center gap-2 shrink-0">
-        <!-- (caminho da imagem aqui: /src/assets/images/logo.png) -->
         <div class="w-9 h-9 rounded-lg bg-gradient-to-br from-hon-gold to-orange-600 flex items-center justify-center">
           <span class="font-display font-bold text-sm text-hon-darker">BET</span>
         </div>
         <span class="font-display text-white font-semibold text-lg hidden sm:block tracking-wide">
-        <span class="text-hon-gold">NOMO</span>
+          <span class="text-hon-gold">NOMO</span>
         </span>
       </RouterLink>
 
-      <div class="hidden md:flex items-center gap-8">
+      <!-- Links só aparecem quando não autenticado -->
+      <div v-if="!auth.isAuthenticated()" class="hidden md:flex items-center gap-8">
         <RouterLink
           v-for="link in navLinks"
           :key="link.to"
@@ -97,17 +97,18 @@ function handleLogout() {
         v-if="mobileMenuOpen"
         class="md:hidden absolute top-16 left-0 right-0 bg-hon-darker border-b border-hon-border px-4 py-4 flex flex-col gap-3"
       >
-        <RouterLink
-          v-for="link in navLinks"
-          :key="link.to"
-          :to="link.to"
-          :class="['py-2 font-medium text-sm', isActive(link.to) ? 'text-hon-gold' : 'text-hon-text']"
-          @click="mobileMenuOpen = false"
-        >
-          {{ link.label }}
-        </RouterLink>
-        <hr class="border-hon-border" />
+        <!-- Links mobile só quando não autenticado -->
         <template v-if="!auth.isAuthenticated()">
+          <RouterLink
+            v-for="link in navLinks"
+            :key="link.to"
+            :to="link.to"
+            :class="['py-2 font-medium text-sm', isActive(link.to) ? 'text-hon-gold' : 'text-hon-text']"
+            @click="mobileMenuOpen = false"
+          >
+            {{ link.label }}
+          </RouterLink>
+          <hr class="border-hon-border" />
           <button class="py-2 text-left text-sm text-hon-text font-medium" @click="emit('openLogin'); mobileMenuOpen = false">
             Entrar
           </button>

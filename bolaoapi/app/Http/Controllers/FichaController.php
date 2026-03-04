@@ -24,9 +24,9 @@ class FichaController extends Controller
             ->get(['id', 'tipo', 'valor', 'usada', 'token', 'created_at']);
 
         $resumo = [
-            'A' => $fichas->where('tipo', 'A')->where('usada', false)->count(),
-            'B' => $fichas->where('tipo', 'B')->where('usada', false)->count(),
-            'C' => $fichas->where('tipo', 'C')->where('usada', false)->count(),
+            'A' => $fichas->where('tipo', 'A')->count(),
+            'B' => $fichas->where('tipo', 'B')->count(),
+            'C' => $fichas->where('tipo', 'C')->count(),
         ];
 
         return response()->json([

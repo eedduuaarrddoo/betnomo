@@ -4,6 +4,7 @@ import { useAuthStore } from '../stores/auth'
 import { useRouter } from 'vue-router'
 import BolaoCard, { type Bolao } from '../components/BolaoCard.vue'
 import '../assets/css/AdminHomeView.css'
+import '../assets/css/userhome.css'
 
 const auth   = useAuthStore()
 const router = useRouter()
