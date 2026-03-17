@@ -11,6 +11,7 @@ Route::post('/login',    [AuthController::class, 'login']);
 Route::middleware('auth:api')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/me',      [AuthController::class, 'me']);
+    Route::get('/verify-email/{token}', [AuthController::class, 'verifyEmail']);
 
     Route::get('/boloes', [BolaoController::class, 'index']);
     Route::post('/boloes/{id}/participar',     [BolaoController::class, 'participar']);

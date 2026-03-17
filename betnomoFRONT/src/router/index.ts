@@ -27,6 +27,10 @@ const router = createRouter({
       component: () => import('../views/AdminHomeView.vue'),
       meta: { requiresAuth: true, requiresAdmin: true },
     },
+    {
+  path: '/verify-email/:token',
+  component: () => import('../views/VerifyEmailPage.vue'),
+}
   ],
 })
 

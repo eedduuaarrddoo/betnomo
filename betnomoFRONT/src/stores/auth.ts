@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
-import type { AuthUser,  RegisterPayload } from '../types/auth'
+import type { AuthUser, RegisterPayload } from '../types/auth'
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000/api'
 
@@ -27,32 +27,24 @@ export const useAuthStore = defineStore('auth', () => {
 
   const isAuthenticated = () => !!token.value
 
- 
   async function login(username: string, password: string): Promise<string> {
     isLoading.value = true
     error.value     = null
-
     try {
       const res  = await fetch(`${API_BASE_URL}/login`, {
         method:  'POST',
         headers: defaultHeaders,
         body:    JSON.stringify({ username, password }),
       })
-
       const data = await res.json()
-
       if (!res.ok) {
         error.value = parseApiError(data)
         throw new Error(error.value ?? 'Erro ao fazer login')
       }
-
       token.value = data.token
-      user.value  = data.user   // { id, username, email, is_admin }
+      user.value  = data.user
       localStorage.setItem('auth_token', data.token)
-
-      // Redirecionamento baseado no is_admin vindo do backend
       return data.is_admin ? '/admin' : '/dashboard'
-
     } catch (e: any) {
       if (!error.value) error.value = e.message
       throw e
@@ -61,29 +53,21 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
-  // ── Register ──────────────────────────────────────────────────────────────
+  
   async function register(payload: RegisterPayload): Promise<boolean> {
     isLoading.value = true
     error.value     = null
-
     try {
       const res  = await fetch(`${API_BASE_URL}/register`, {
         method:  'POST',
         headers: defaultHeaders,
         body:    JSON.stringify(payload),
       })
-
       const data = await res.json()
-
       if (!res.ok) {
         error.value = parseApiError(data)
         return false
       }
-
-      user.value  = data.user
-      token.value = data.token
-      localStorage.setItem('auth_token', data.token)
-
       return true
     } catch {
       error.value = 'Erro ao conectar com o servidor.'
@@ -93,10 +77,35 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
-  // ── Fetch me (recarrega dados do usuário logado) ──────────────────────────
+  
+  async function verifyEmail(verificationToken: string): Promise<string> {
+    isLoading.value = true
+    error.value     = null
+    try {
+      const res  = await fetch(`${API_BASE_URL}/verify-email/${verificationToken}`, {
+        method:  'GET',
+        headers: defaultHeaders,
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        error.value = parseApiError(data)
+        throw new Error(error.value ?? 'Token inválido')
+      }
+      token.value = data.token
+      localStorage.setItem('auth_token', data.token)
+      // Busca os dados do usuário logo após verificar
+      await fetchMe()
+      return user.value?.is_admin ? '/admin' : '/dashboard'
+    } catch (e: any) {
+      if (!error.value) error.value = e.message
+      throw e
+    } finally {
+      isLoading.value = false
+    }
+  }
+
   async function fetchMe(): Promise<void> {
     if (!token.value) return
-
     try {
       const res = await fetch(`${API_BASE_URL}/me`, {
         headers: {
@@ -104,16 +113,12 @@ export const useAuthStore = defineStore('auth', () => {
           Authorization: `Bearer ${token.value}`,
         },
       })
-
-      if (res.ok) {
-        user.value = await res.json()  // também contém is_admin
-      }
+      if (res.ok) user.value = await res.json()
     } catch {
       // silencioso
     }
   }
 
-  // ── Logout ────────────────────────────────────────────────────────────────
   async function logout(): Promise<void> {
     if (token.value) {
       try {
@@ -128,26 +133,16 @@ export const useAuthStore = defineStore('auth', () => {
         // silencioso
       }
     }
-
     user.value  = null
     token.value = null
     localStorage.removeItem('auth_token')
   }
 
-  function clearError() {
-    error.value = null
-  }
+  function clearError() { error.value = null }
 
   return {
-    user,
-    token,
-    isLoading,
-    error,
-    isAuthenticated,
-    login,
-    register,
-    logout,
-    clearError,
-    fetchMe,
+    user, token, isLoading, error,
+    isAuthenticated, login, register, verifyEmail,
+    logout, clearError, fetchMe,
   }
 })
