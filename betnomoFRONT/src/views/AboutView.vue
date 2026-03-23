@@ -29,17 +29,31 @@
         <div class="bg-hon-card border border-hon-border rounded-xl p-6">
           <h2 class="font-display text-white font-semibold text-xl mb-3">Nossa História</h2>
           <p class="text-hon-muted text-sm leading-relaxed">
-            Originalmente lançado em 2010, Heroes of Newerth retornou com força total.
-            O jogo foi completamente revisitado para oferecer a melhor experiência MOBA possível
-            para novos e veteranos jogadores.
+            Somos novos no mercado, mas já chegamos com experiência suficiente pra transformar esperança em estatística negativa.
+
+Aqui, você não perde dinheiro… você investe em decepção a longo prazo. Nosso compromisso é simples: promessas altas, probabilidades baixas e aquele friozinho na barriga que só vem quando o saldo zera.
+
+Acreditamos no impacto social — principalmente na arte de ensinar matemática da pior forma possível.
+
+Entre, jogue, e descubra como pequenos cliques podem levar a grandes arrependimentos.
+
+Casa de apostas fictícia: onde o sonho entra… e o dinheiro não volta.
+
           </p>
         </div>
 
         <div class="bg-hon-card border border-hon-border rounded-xl p-6">
           <h2 class="font-display text-white font-semibold text-xl mb-3">Nossa Missão</h2>
           <p class="text-hon-muted text-sm leading-relaxed">
-            Proporcionar batalhas épicas, competições emocionantes e uma comunidade saudável
-            onde cada jogador possa evoluir e se destacar no campo de batalha.
+
+Trabalhamos com um objetivo claro e transparente: transformar pequenas apostas em grandes fortunas — concentradas em um lugar só.
+
+A cada clique seu, damos mais um passo rumo ao nosso sonho: otimizar a transferência de renda direta para o topo, enquanto você coleciona histórias de “quase ganhei”.
+
+Valorizamos eficiência. Por isso, garantimos que o dinheiro circule rápido… especialmente na direção de contas bem protegidas em paraísos fiscais.
+
+No fim das contas, A casa precisa ganhar sempre. E a gente leva essa responsabilidade muito a sério.
+
           </p>
         </div>
       </div>

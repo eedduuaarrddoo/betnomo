@@ -34,16 +34,19 @@ const router = createRouter({
   ],
 })
 
-// Guard de navegação
-router.beforeEach((to) => {
+
+router.beforeEach(async (to) => {
   const auth = useAuthStore()
 
-  
   if (to.meta.requiresAuth && !auth.token) {
     return { name: 'home' }
   }
 
-  
+  // Se tem token mas user ainda nao foi carregado (ex: F5), busca antes de verificar
+  if (auth.token && !auth.user) {
+    await auth.fetchMe()
+  }
+
   if (to.meta.requiresAdmin && !auth.user?.is_admin) {
     return { name: 'dashboard' }
   }

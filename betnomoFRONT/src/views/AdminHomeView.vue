@@ -3,6 +3,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useAuthStore } from '../stores/auth'
 import { useRouter } from 'vue-router'
 import BolaoCard, { type Bolao } from '../components/BolaoCard.vue'
+import CriarBolaoModal from '../components/CriarBolaomodal.vue'   
 import '../assets/css/AdminHomeView.css'
 import '../assets/css/userhome.css'
 
@@ -27,7 +28,10 @@ async function carregarBoloes() {
   loadingBoloes.value = true
   try {
     const res = await fetch(`${API}/boloes`, {
-      headers: { Authorization: `Bearer ${token()}` },
+      headers: {
+        Authorization: `Bearer ${token()}`,
+        Accept: 'application/json',
+      },
     })
     boloes.value = await res.json()
   } catch (e) {
@@ -44,41 +48,15 @@ const stats = computed(() => ({
   fichas:   boloes.value.reduce((acc, b) => acc + b.valor_total, 0),
 }))
 
-// ── Modal criar bolao ─────────────────────────────────────────────────────────
+// ── Modal ─────────────────────────────────────────────────────────────────────
 const showCriarModal = ref(false)
-const criando        = ref(false)
-const criarError     = ref('')
 
-const novobolao = ref({
-  classe:            'C',
-  hora_abertura:     '',
-  hora_sorteio:      '',
-  max_participantes: 20,
-})
-
-async function criarBolao() {
-  criando.value    = true
-  criarError.value = ''
-
-  try {
-    const res  = await fetch(`${API}/admin/boloes`, {
-      method:  'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token()}` },
-      body:    JSON.stringify(novobolao.value),
-    })
-    const data = await res.json()
-    if (!res.ok) throw new Error(data.message ?? 'Erro ao criar bolao')
-
-    showCriarModal.value = false
-    novobolao.value = { classe: 'C', hora_abertura: '', hora_sorteio: '', max_participantes: 20 }
-    await carregarBoloes()
-  } catch (e: any) {
-    criarError.value = e.message
-  } finally {
-    criando.value = false
-  }
+function onBolaoCreated() {
+  showCriarModal.value = false
+  carregarBoloes()
 }
 
+// ── Auth ──────────────────────────────────────────────────────────────────────
 const userInitial = computed(() =>
   auth.user?.username?.charAt(0).toUpperCase() || 'A'
 )
@@ -207,7 +185,6 @@ onMounted(() => carregarBoloes())
             <p>Nenhum bolao encontrado.</p>
           </div>
 
-          <!-- BolaoCard decide o botao com base em bolao.acao vindo do backend -->
           <div v-else class="boloes-grid">
             <BolaoCard
               v-for="bolao in boloesFiltrados"
@@ -227,49 +204,12 @@ onMounted(() => carregarBoloes())
       </div>
     </div>
 
-    <Transition name="modal-fade">
-      <div v-if="showCriarModal" class="cb-overlay" @click.self="showCriarModal = false">
-        <div class="cb-modal">
-          <button class="cb-close" @click="showCriarModal = false">x</button>
-          <h2 class="cb-title"><span>Criar</span> Bolao</h2>
-
-          <div class="cb-form">
-            <div class="cb-field">
-              <label class="cb-label">Classe</label>
-              <select v-model="novobolao.classe" class="cb-select">
-                <option value="A">Classe A - R$ 50</option>
-                <option value="B">Classe B - R$ 25</option>
-                <option value="C">Classe C - R$ 5</option>
-              </select>
-            </div>
-
-            <div class="cb-row">
-              <div class="cb-field">
-                <label class="cb-label">Hora de Abertura</label>
-                <input v-model="novobolao.hora_abertura" type="time" class="cb-input" />
-              </div>
-              <div class="cb-field">
-                <label class="cb-label">Hora do Sorteio</label>
-                <input v-model="novobolao.hora_sorteio" type="time" class="cb-input" />
-              </div>
-            </div>
-
-            <div class="cb-field">
-              <label class="cb-label">Max. Participantes</label>
-              <input v-model.number="novobolao.max_participantes" type="number" min="2" max="100" class="cb-input" />
-            </div>
-
-            <p v-if="criarError" class="cb-error">{{ criarError }}</p>
-
-            <button class="cb-btn" :disabled="criando" @click="criarBolao">
-              <span v-if="criando" class="cb-spinner" />
-              <span v-if="criando">Criando...</span>
-              <span v-else>Criar Bolao</span>
-            </button>
-          </div>
-        </div>
-      </div>
-    </Transition>
+    <!-- Modal agora é um componente separado -->
+    <CriarBolaoModal
+      v-if="showCriarModal"
+      @fechar="showCriarModal = false"
+      @criado="onBolaoCreated"
+    />
 
   </div>
 </template>
