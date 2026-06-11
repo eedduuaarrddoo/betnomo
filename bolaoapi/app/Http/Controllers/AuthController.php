@@ -99,4 +99,28 @@ public function verifyEmail(string $token)
             'is_admin' => (bool) $user->is_admin,
         ]);
     }
+
+    public function listUsers(Request $request)
+    {
+        $users = User::with(['fichas' => function ($query) {
+            $query->select('id', 'tipo', 'usada', 'user_id');
+        }])->get();
+
+        return response()->json($users->map(function ($user) {
+            $fichas = $user->fichas;
+            $fichasAtivas = $fichas->where('usada', false);
+
+            return [
+                'id'       => $user->id,
+                'username' => $user->username,
+                'email'    => $user->email,
+                'is_admin' => (bool) $user->is_admin,
+                'fichas_resumo' => [
+                    'A' => $fichasAtivas->where('tipo', 'A')->count(),
+                    'B' => $fichasAtivas->where('tipo', 'B')->count(),
+                    'C' => $fichasAtivas->where('tipo', 'C')->count(),
+                ]
+            ];
+        }));
+    }
 }

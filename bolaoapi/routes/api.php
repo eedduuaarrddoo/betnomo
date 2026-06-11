@@ -42,6 +42,7 @@ Route::middleware('auth:api')->group(function () {
         Route::get('/dashboard',            [BolaoController::class, 'adminDashboard']);
         Route::post('/boloes',              [BolaoController::class, 'store']);
         Route::post('/boloes/{id}/sortear', [BolaoController::class, 'sortear']);
+        Route::get('/usuarios',             [AuthController::class, 'listUsers']);
     });
 
 });

@@ -19,9 +19,22 @@ const filtroClasse = ref<'TODOS' | 'A' | 'B' | 'C'>('TODOS')
 const boloes        = ref<Bolao[]>([])
 const loadingBoloes = ref(false)
 
+const usuarios        = ref<any[]>([])
+const loadingUsuarios = ref(false)
+const buscaUsuario    = ref('')
+
 const boloesFiltrados = computed(() => {
   if (filtroClasse.value === 'TODOS') return boloes.value
   return boloes.value.filter(b => b.classe === filtroClasse.value)
+})
+
+const usuariosFiltrados = computed(() => {
+  if (!buscaUsuario.value.trim()) return usuarios.value
+  const query = buscaUsuario.value.toLowerCase()
+  return usuarios.value.filter(u => 
+    u.username.toLowerCase().includes(query) || 
+    u.email.toLowerCase().includes(query)
+  )
 })
 
 async function carregarBoloes() {
@@ -38,6 +51,23 @@ async function carregarBoloes() {
     console.error('Erro ao carregar boloes:', e)
   } finally {
     loadingBoloes.value = false
+  }
+}
+
+async function carregarUsuarios() {
+  loadingUsuarios.value = true
+  try {
+    const res = await fetch(`${API}/admin/usuarios`, {
+      headers: {
+        Authorization: `Bearer ${token()}`,
+        Accept: 'application/json',
+      },
+    })
+    usuarios.value = await res.json()
+  } catch (e) {
+    console.error('Erro ao carregar usuarios:', e)
+  } finally {
+    loadingUsuarios.value = false
   }
 }
 
@@ -66,7 +96,10 @@ function logout() {
   router.push('/')
 }
 
-onMounted(() => carregarBoloes())
+onMounted(() => {
+  carregarBoloes()
+  carregarUsuarios()
+})
 </script>
 
 <template>
@@ -86,6 +119,7 @@ onMounted(() => carregarBoloes())
       <button :class="['admin-nav-btn', activeNav === 'usuarios' ? 'active' : '']" @click="activeNav = 'usuarios'">
         <span class="nav-icon">👥</span>
         Usuarios
+        <span class="admin-nav-badge">{{ usuarios.length }}</span>
       </button>
 
       <button :class="['admin-nav-btn', activeNav === 'fichas' ? 'active' : '']" @click="activeNav = 'fichas'">
@@ -194,6 +228,76 @@ onMounted(() => carregarBoloes())
             />
           </div>
 
+        </div>
+
+        <div v-else-if="activeNav === 'usuarios'">
+          <div class="admin-section-header">
+            <span class="admin-section-label">Usuários Cadastrados</span>
+            
+            <div class="admin-search-wrapper">
+              <input 
+                v-model="buscaUsuario" 
+                type="text" 
+                placeholder="Buscar por usuário ou e-mail..." 
+                class="cb-input admin-search-input" 
+              />
+            </div>
+          </div>
+
+          <div v-if="loadingUsuarios" class="admin-empty">
+            <div class="cb-spinner admin-spinner" />
+            <p>Carregando usuários...</p>
+          </div>
+
+          <div v-else-if="usuariosFiltrados.length === 0" class="admin-empty">
+            <p>👥</p>
+            <p>Nenhum usuário encontrado.</p>
+          </div>
+
+          <div v-else class="admin-table-wrap">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Usuário</th>
+                  <th>E-mail</th>
+                  <th class="text-center">Fichas A</th>
+                  <th class="text-center">Fichas B</th>
+                  <th class="text-center">Fichas C</th>
+                  <th class="text-right">Função</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="u in usuariosFiltrados" :key="u.id">
+                  <td>#{{ u.id }}</td>
+                  <td class="username-cell">{{ u.username }}</td>
+                  <td>{{ u.email }}</td>
+                  <td class="text-center">
+                    <span class="classe-badge A mini-badge">
+                      {{ u.fichas_resumo?.A ?? 0 }}
+                    </span>
+                  </td>
+                  <td class="text-center">
+                    <span class="classe-badge B mini-badge">
+                      {{ u.fichas_resumo?.B ?? 0 }}
+                    </span>
+                  </td>
+                  <td class="text-center">
+                    <span class="classe-badge C mini-badge">
+                      {{ u.fichas_resumo?.C ?? 0 }}
+                    </span>
+                  </td>
+                  <td class="text-right">
+                    <span 
+                      :class="['status-pill', u.is_admin ? 'aberto' : 'fechado', 'role-badge']"
+                    >
+                      {{ u.is_admin ? 'Admin' : 'Jogador' }}
+                    </span>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </div>
 
         <div v-else class="admin-empty" style="margin-top: 40px;">

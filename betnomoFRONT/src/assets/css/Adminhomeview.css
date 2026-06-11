@@ -351,3 +351,39 @@
 /* ── Transição modal ─────────────────────────────────────────────────────── */
 .modal-fade-enter-active, .modal-fade-leave-active { transition: opacity 0.25s ease; }
 .modal-fade-enter-from,   .modal-fade-leave-to     { opacity: 0; }
+
+/* ── Admin Users Page Styles ────────────────────────────────────────────── */
+.text-center {
+  text-align: center;
+}
+.text-right {
+  text-align: right;
+}
+.admin-search-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.admin-search-input {
+  padding: 6px 12px;
+  font-size: 0.8rem;
+  width: 220px;
+  margin: 0;
+}
+.admin-spinner {
+  width: 24px;
+  height: 24px;
+}
+.username-cell {
+  font-weight: 600;
+  color: #fff;
+}
+.mini-badge {
+  font-size: 0.65rem;
+  width: 20px;
+  height: 20px;
+}
+.role-badge {
+  text-transform: uppercase;
+  font-size: 0.6rem;
+}
