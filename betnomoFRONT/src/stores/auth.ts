@@ -113,9 +113,14 @@ export const useAuthStore = defineStore('auth', () => {
           Authorization: `Bearer ${token.value}`,
         },
       })
-      if (res.ok) user.value = await res.json()
+      if (res.ok) {
+        user.value = await res.json()
+      } else {
+        // Se a resposta for de erro (ex: token inválido ou expirado), limpa a sessão local
+        await logout()
+      }
     } catch {
-      // silencioso
+      // Silencioso: em caso de falha de rede/conexão, mantém o estado para evitar deslogar em quedas temporárias de internet
     }
   }
 

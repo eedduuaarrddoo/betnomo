@@ -38,7 +38,7 @@ class VerifyUserEmail extends Mailable
     </head>
     <body>
         <div class="container">
-            <p class="logo">Bolão da Sorte</p>
+            <p class="logo">BETNOMO</p>
             <h2>Olá, ' . $this->user->username . '!</h2>
             <p>Obrigado por se cadastrar. Clique no botão abaixo para confirmar seu endereço de e-mail e ativar sua conta.</p>
             <a href="' . $this->verificationUrl . '" class="btn">Verificar meu e-mail</a>
